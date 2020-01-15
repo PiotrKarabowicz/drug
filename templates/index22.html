@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>{{ text}}</title>
+  </head>
+  <body>
+    <p> Your req: {{ text}}</p>
+
+    {% for table in lista_abstract %}
+            {{titles[loop.index]}}
+            {{ table|safe }}
+    {% endfor %}
+
+<img src="{{url_for('static', filename='output.png')}}" />
+
+</body></html>
