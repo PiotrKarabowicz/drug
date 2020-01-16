@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html><head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <title>{{ text}}</title>
+    <title>Results {{ text}}</title>
   </head>
   <body>
-    <p> Your req: {{ text}}</p>
+    <h2> Report</h2>
+	<hr>
+	<p> Your req: {{ text}}</p>
 
     {% for table in lista_abstract %}
             {{titles[loop.index]}}
