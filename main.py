@@ -24,25 +24,72 @@ def my_form_post():
     #count_vect.fit(text)
     text = [text]
     pubmed = PubMed(tool="MyTool", email="p.karabowicz@gmail.com")
-    results1 = pubmed.query(text, max_results=50)
+    results_pred = pubmed.query(text, max_results=50)
 
-    lista_abstract_3=[]
+    from keras.models import load_model
+    model1 = load_model('/static/model.h5')
 
-    for i in results1:
-        lista_abstract_3.append(i.abstract)
 
-    df_abstract = pd.DataFrame(lista_abstract_3, columns = ['abstracts'])
-    df_abstract['abstracts_lower'] = df_abstract['abstracts'].str.lower()
+    lista_abstract_pred=[]
 
-    df_abstract_1 = df_abstract.dropna()
+    for i in results_pred:
+        lista_abstract_pred.append(i.abstract)
 
-    rnd = pickle.load(open('/static/finalized_model.sav', 'rb'))
-    from sklearn.feature_extraction.text import CountVectorizer
-    count_vect = CountVectorizer(analyzer='word', token_pattern=r'\w{1,}', max_features=100)
-    result1=count_vect.transform(df_abstract_1['abstracts_lower'])
-    result2 = rnd.predict(result1)
 
-    df_abstract_1['class'] = result2
+    df_base_pred = pd.DataFrame(lista_abstract_pred, columns = ['abstracts'])
+
+    df_base_pred['abstracts_lower'] = df_base_pred['abstracts'].str.lower()
+    df_base_pred1 = df_base_pred.dropna()
+    import string
+    from nltk.tokenize import word_tokenize
+    from nltk.corpus import stopwords
+
+    review_lines = list()
+
+    lines = df_base_pred1['abstracts_lower'].values.tolist()
+
+    for line in lines:
+        tokens = word_tokenize(line)
+        tokens = [w.lower() for w in tokens]
+        table = str.maketrans('', '', string.punctuation)
+        stripped = [w.translate(table) for w in tokens]
+        words = [word for word in stripped if word.isalpha() ]
+        stop_words = set(stopwords.words('english'))
+        words = [w for w in words if not w in stop_words]
+        review_lines.append(words)
+
+    len(review_lines)
+
+    from keras.preprocessing.text import Tokenizer
+    from keras.preprocessing.sequence import pad_sequences
+    from keras.utils import to_categorical
+
+    MAX_SEQUENCE_LENGTH = 200
+
+    tokenizer = Tokenizer()
+    tokenizer.fit_on_texts(review_lines)
+    sequences = tokenizer.texts_to_sequences(review_lines)
+
+    word_index = tokenizer.word_index
+
+
+    review_pad = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)
+
+    sentiment =  df_base['class'].values
+
+    indices = np.arange(review_pad.shape[0])
+    np.random.shuffle(indices)
+    review_pad = review_pad[indices]
+    sentiment = sentiment[indices]
+    x_test = review_pad[:]
+
+    ynew1 = model1.predict_classes(x_test)
+    df_base_pred1['class'] = ynew1
+
+    df = df_base_pred1[['abstracts','class']]
+    df_good = df[df['class'] ==1]
+
+    len_df= len(df_good)
 
 #unsupervised learning
     from gensim.models import Word2Vec
