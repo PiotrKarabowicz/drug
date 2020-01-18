@@ -12,7 +12,7 @@
   <h3> Abstracts </h3>
   <p> AIPharm engine extracted {{len_df}} abstracts</p><br>
   <P> that can be connected with drug target </p>
-    {% for table in df_good %}
+    {% for table in lista_abstract %}
             {{titles[loop.index]}}
             {{ table|safe }}
     {% endfor %}
